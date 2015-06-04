@@ -3,8 +3,8 @@
  *
  * @file        image-dialog.js
  * @author      pandao
- * @version     1.3.0
- * @updateTime  2015-05-06
+ * @version     1.3.3
+ * @updateTime  2015-06-02
  * {@link       https://github.com/pandao/editor.md}
  * @license     MIT
  */
@@ -31,8 +31,13 @@
 
 			cm.focus();
 
+            var loading = function(show) {
+                var _loading = dialog.find("." + classPrefix + "dialog-mask");
+                _loading[(show) ? "show" : "hide"]();
+            };
+
             if (editor.find("." + dialogName).length < 1)
-            {    
+            {
                 var guid   = (new Date).getTime();
                 var action = settings.imageUploadURL + (settings.imageUploadURL.indexOf("?") >= 0 ? "&" : "?") + "guid=" + guid;
 
@@ -52,14 +57,14 @@
                                         })() +
                                         "<br/>" +
                                         "<label>" + imageLang.alt + "</label>" +
-                                        "<input type=\"text\" value=\"" + selection + "\" data-alt />" + 
+                                        "<input type=\"text\" value=\"" + selection + "\" data-alt />" +
                                         "<br/>" +
                                         "<label>" + imageLang.link + "</label>" +
                                         "<input type=\"text\" value=\"http://\" data-link />" +
                                         "<br/>" +
                                     ( (settings.imageUpload) ? "</form>" : "</div>");
 
-                //var imageFooterHTML = "<button class=\"" + classPrefix + "btn " + classPrefix + "image-manager-btn\" style=\"float:left;\">" + imageLang.managerButton + "</button>";  
+                //var imageFooterHTML = "<button class=\"" + classPrefix + "btn " + classPrefix + "image-manager-btn\" style=\"float:left;\">" + imageLang.managerButton + "</button>";
 
                 dialog = this.createDialog({
                     title      : imageLang.title,
@@ -89,11 +94,11 @@
 							var altAttr = (alt !== "") ? " \"" + alt + "\"" : "";
 
                             if (link === "" || link === "http://")
-                            {                                    
+                            {
                                 cm.replaceSelection("![" + alt + "](" + url + altAttr + ")");
                             }
-                            else 
-                            {                                   
+                            else
+                            {
                                 cm.replaceSelection("[![" + alt + "](" + url + altAttr + ")](" + link + altAttr + ")");
                             }
 
@@ -106,7 +111,7 @@
                             return false;
                         }],
 
-                        cancel : [lang.buttons.cancel, function() {                                   
+                        cancel : [lang.buttons.cancel, function() {
                             this.hide().lockScreen(false).hideMask();
 
                             return false;
@@ -129,47 +134,46 @@
 					if (fileName === "")
 					{
 						alert(imageLang.uploadFileEmpty);
+                        
+                        return false;
 					}
-					else if (!isImage.test(fileName))
-					{      
-						alert(imageLang.formatNotAllowed + settings.imageFormats.join(", "));
-					} 
-					else
+					
+                    if (!isImage.test(fileName))
 					{
-						if (typeof (dialog.loading) == "function") {
-                            dialog.loading(true);
-                        }
-
-						var submitHandler = function() {
-
-							var uploadIframe = document.getElementById(iframeName);
-
-							uploadIframe.onload = function() {
-								if (typeof (dialog.loading) == "function") {
-                                    dialog.loading(false);
-                                }
-
-								var json = uploadIframe.contentWindow.document.body.innerHTML;
-								json = (typeof JSON.parse !== "undefined") ? JSON.parse(json) : eval("(" + json + ")");
-
-								if (json.success === 1)
-								{
-									dialog.find("[data-url]").val(json.url);
-								}
-								else
-								{
-									alert(json.message);
-								}
-
-								return false;
-							};
-						};
-
-						dialog.find("[type=\"submit\"]").bind("click", submitHandler).trigger("click");
-
+						alert(imageLang.formatNotAllowed + settings.imageFormats.join(", "));
+                        
+                        return false;
 					}
 
-					return false;
+                    loading(true);
+
+                    var submitHandler = function() {
+
+                        var uploadIframe = document.getElementById(iframeName);
+
+                        uploadIframe.onload = function() {
+                            
+                            loading(false);
+
+                            var body = (uploadIframe.contentWindow ? uploadIframe.contentWindow : uploadIframe.contentDocument).document.body;
+                            var json = (body.innerText) ? body.innerText : ( (body.textContent) ? body.textContent : null);
+
+                            json = (typeof JSON.parse !== "undefined") ? JSON.parse(json) : eval("(" + json + ")");
+
+                            if (json.success === 1)
+                            {
+                                dialog.find("[data-url]").val(json.url);
+                            }
+                            else
+                            {
+                                alert(json.message);
+                            }
+
+                            return false;
+                        };
+                    };
+
+                    dialog.find("[type=\"submit\"]").bind("click", submitHandler).trigger("click");
 				});
             }
 
@@ -185,10 +189,10 @@
 		};
 
 	};
-    
+
 	// CommonJS/Node.js
 	if (typeof require === "function" && typeof exports === "object" && typeof module === "object")
-    { 
+    {
         module.exports = factory;
     }
 	else if (typeof define === "function")  // AMD/CMD/Sea.js
@@ -205,7 +209,7 @@
                 factory(editormd);
             });
 		}
-	} 
+	}
 	else
 	{
         factory(window.editormd);

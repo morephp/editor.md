@@ -11,6 +11,7 @@
      * Copyright@2015 Editor.md all right reserved.
 	 */
 
+    //header("Content-Type:application/json; charset=utf-8"); // Unsupport IE
     header("Content-Type:text/html; charset=utf-8");
     header("Access-Control-Allow-Origin: *");
 
@@ -23,7 +24,7 @@
 	$savePath = realpath($path . '../uploads/') . DIRECTORY_SEPARATOR;
 	$saveURL  = $url . '../uploads/';
 
-	$formats  = array(		
+	$formats  = array(
 		'image' => array('gif', 'jpg', 'jpeg', 'png', 'bmp')
 	);
 
@@ -41,6 +42,10 @@
         if ($imageUploader->upload($name))
         {
             $imageUploader->message('上传成功！', 1);
+        }
+        else
+        {
+            $imageUploader->message('上传失败！', 0);
         }
     }
 ?>
